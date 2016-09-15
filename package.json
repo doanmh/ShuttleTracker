@@ -1,0 +1,50 @@
+{
+  "name": "ShuttleTracker",
+  "author": "Minh Doan",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {
+    "pebble-clay": "^1.0.2"
+  },
+  "pebble": {
+    "displayName": "ShuttleTracker",
+    "uuid": "c866c8f2-55c2-4511-b43c-c1670205941b",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "capabilities": [
+      "location",
+      "configurable"
+    ],
+    "messageKeys": [
+      "ARRIVALTIME"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_PERFECT_DOS_48",
+          "file": "fonts/perfect-dos-vga.ttf",
+          "compatibility": "2.7"
+        },
+        {
+          "type": "font",
+          "name": "FONT_PERFECT_DOS_15",
+          "file": "fonts/perfect-dos-vga.ttf",
+          "compatibility": "2.7"
+        }
+      ]
+    }
+  }
+}
