@@ -78,9 +78,6 @@ var getRoutesSelection = function() {
 	return options
 }
 
-// var routesArray = fetchRoutes();
-// var stopsArray = fetchStops(); 
-
 Pebble.addEventListener("ready", function(e) {
 	var xhrRoutes = new XMLHttpRequest();
 	xhrRoutes.onload = function() {
@@ -99,13 +96,10 @@ Pebble.addEventListener("ready", function(e) {
 	clayConfig[2].items[1].options = getRoutesSelection();
 
 	console.log("PebbleKitJS is ready!");
-	// getEstimate(103);
 });
 
 Pebble.addEventListener("appmessage", function(e) {
 	console.log("AppMessage received!");
-
-	// getEstimate(103);
 });
 
 Pebble.addEventListener('showConfiguration', function(e) {
