@@ -79,6 +79,12 @@ var getRoutesSelection = function() {
 }
 
 Pebble.addEventListener("ready", function(e) {
+	var chosenStop = localStorage.getItem('chosenStop');
+
+	if (chosenStop) {
+		getEstimate(chosenStop);
+	}
+
 	var xhrRoutes = new XMLHttpRequest();
 	xhrRoutes.onload = function() {
 		routesArray = JSON.parse(this.responseText);
@@ -116,6 +122,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
 	}
 
 	var stop = JSON.parse(e.response).select_stop.value;
+
+	localStorage.setItem('chosenStop', stop);
 
 	getEstimate(stop);
 
