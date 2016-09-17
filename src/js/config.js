@@ -20,7 +20,7 @@ module.exports = [
 				"type": "select",
 				"defaultValue": "",
 				"label": "Choose Route",
-				"messageKey": "select-route",
+				"messageKey": "select_route",
 				"id": "routeList",
 				"options": [
 					
@@ -30,7 +30,7 @@ module.exports = [
 				"type": "select",
 				"defaultValue": "",
 				"label": "Choose Stop",
-				"messaageKey": "select-stop",
+				"messageKey": "select_stop",
 				"id": "stopList",
 				"options": [
 

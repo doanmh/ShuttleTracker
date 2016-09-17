@@ -1,13 +1,14 @@
 var Clay = require('pebble-clay');
 var clayConfig = require('./config');
 var customClay = require('./custom-clay');
-var clay = {};
+var clay = new Clay(clayConfig, customClay, {autoHandleEvents: false, userData: {}});
 
 var busesURL = "https://uc.doublemap.com/map/v2/buses";
 var routesURL = "https://uc.doublemap.com/map/v2/routes";
 var stopsURL = "https://uc.doublemap.com/map/v2/stops";
-
-var isReady = false;
+var routesArray = [];
+var stopsArray = [];
+var userData = {};
 
 var xhrRequest = function(url, type, callback) {
 	var xhr = new XMLHttpRequest();
@@ -22,7 +23,10 @@ var xhrRequest = function(url, type, callback) {
 var fetchStops = function() {
 	var stops = [];
 	xhrRequest(stopsURL, "GET", function(response) {
-		stops = JSON.parse(response);
+		arr = JSON.parse(response);
+		for (var i = 0; i < arr.length; i++) {
+			stops.push(arr[i]);
+		}
 	});
 	return stops;
 }
@@ -62,7 +66,7 @@ var getEstimate = function(stop) {
 	});
 }
 
-var getRoutesSelection = function(routesArray) {
+var getRoutesSelection = function() {
 	var options = [ {"label": "", "value": ""} ];
 	xhrRequest(routesURL, "GET", function(response) {
 		var routesArray = JSON.parse(response);
@@ -74,43 +78,59 @@ var getRoutesSelection = function(routesArray) {
 	return options
 }
 
-Pebble.addEventListener("ready", function(err) {
-	isReady = false;
+// var routesArray = fetchRoutes();
+// var stopsArray = fetchStops(); 
+
+Pebble.addEventListener("ready", function(e) {
+	var xhrRoutes = new XMLHttpRequest();
+	xhrRoutes.onload = function() {
+		routesArray = JSON.parse(this.responseText);
+	};
+	xhrRoutes.open("GET", routesURL);
+	xhrRoutes.send();
+
+	var xhrStops = new XMLHttpRequest();
+	xhrStops.onload = function() {
+		stopsArray = JSON.parse(this.responseText);
+	};
+	xhrStops.open("GET", stopsURL);
+	xhrStops.send();
+
+	clayConfig[2].items[1].options = getRoutesSelection();
+
 	console.log("PebbleKitJS is ready!");
-	var routesArray = fetchRoutes();
-	var stopsArray = fetchStops();
-	var userData = {routes: routesArray, stops: stopsArray};
-	clayConfig[2].items[1].options = getRoutesSelection(routesArray);
-	clay = new Clay(clayConfig, customClay, {autoHandleEvents: false, userData: userData}); 
-	isReady = true;
-	getEstimate(103);
+	// getEstimate(103);
 });
 
-Pebble.addEventListener("appmessage", function(err) {
+Pebble.addEventListener("appmessage", function(e) {
 	console.log("AppMessage received!");
 
-	getEstimate(103);
+	// getEstimate(103);
 });
 
-Pebble.addEventListener('showConfiguration', function(err) {
-	if (isReady) {
-		clay.config = clayConfig;
-		Pebble.openURL(clay.generateUrl());
-		console.log("Configuration showed");
-	}
+Pebble.addEventListener('showConfiguration', function(e) {
+	userData = {routes: routesArray, stops: stopsArray};
+	clay.meta.userData = userData;
+	clay.config = clayConfig;
+	Pebble.openURL(clay.generateUrl());
+	console.log("Configuration showed");
 });
 
-Pebble.addEventListener('webviewclosed', function(err) {
-	if (err && !err.response) {
+Pebble.addEventListener('webviewclosed', function(e) {
+	if (e && !e.response) {
 		return;
 	}
 
-	var dict = clay.getSettings(err.response)
+	var stop = JSON.parse(e.response).select_stop.value;
 
-	Pebble.sendAppMessage(dict, function(err) {
+	getEstimate(stop);
+
+	var dict = clay.getSettings(e.response)
+
+	Pebble.sendAppMessage(dict, function(e) {
 		console.log('Sent config data to Pebble');
-	}, function (err) {
+	}, function (e) {
 		console.log('Failed to send config data!');
-		console.log(JSON.stringify(err));
+		console.log(JSON.stringify(e));
 	});
 });

@@ -6,6 +6,8 @@ module.exports = function(minified) {
 	var allRoutes = clayConfig.meta.userData.routes;
 	var actualStopsID = [];
 	var actualStops = [];
+	var routeIndex;
+	var first = true;
 
 	var getActualStops = function(actualStopsID) {
 		for (var i = 0; i < allStops.length; i++) {
@@ -13,22 +15,38 @@ module.exports = function(minified) {
 				actualStops.push(allStops[i]);
 			}
 		}
-		clayConfig.getItemByMessageKey("select-stop").options = [{"label": "", "value":""}];
-		for (var i = 0; i < allStops.length; i++) {
+
+		var stopsArray = [{"label": "", "value":""}];
+		for (var i = 0; i < actualStops.length; i++) {
 			var stop = { "label": actualStops[i].name, "value": actualStops[i].id};
-			clayConfig.getItemByMessageKey("select-stop").options.push(stop);
+			stopsArray.push(stop);
 		}
 
+		// var routesArray = [ {"label": "", "value": ""} ];
+		// for (var i = 0; i < allRoutes.length; i++) {
+		// 	var route = { "label": allRoutes[i].name, "value": i };
+		// 	routesArray.push(route);
+		// }
+
+		// clayConfig.config[1].items[2].options = routesArray;
+		clayConfig.config[2].items[2].options = stopsArray; 
+
+
+		// getItemByMessageKey("select-stop").options = options;
+
 		clayConfig.build();
+		clayConfig.getItemByMessageKey("select_route").set(routeIndex);
 	}
 
 	clayConfig.on(clayConfig.EVENTS.AFTER_BUILD, function() {
-		var routesSelect = clayConfig.getItemByMessageKey("select-route");
+		var routesSelect = clayConfig.getItemByMessageKey("select_route");
 		routesSelect.on("change", function() {
-			var routeIndex = parseInt(routesSelect.get());
-			clayConfig.getItemById("text").set(Object.keys(clayConfig.meta.userData));
-			actualStopsID = allRoutes[routeIndex].stops;
-			getActualStops(actualStopsID);
+			if (first) {
+				first = false;
+				routeIndex = parseInt(routesSelect.get());
+				actualStopsID = allRoutes[routeIndex].stops;
+				getActualStops(actualStopsID);
+			}
 		});
 	});
 };

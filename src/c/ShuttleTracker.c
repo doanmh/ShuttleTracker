@@ -13,7 +13,7 @@ static void main_window_load(Window *window) {
 	text_layer_set_background_color(s_shuttle_layer, GColorClear);
 	text_layer_set_text_color(s_shuttle_layer, GColorBlack);
 	text_layer_set_text_alignment(s_shuttle_layer, GTextAlignmentLeft);
-	text_layer_set_text(s_shuttle_layer, "Loading shuttle...");
+	text_layer_set_text(s_shuttle_layer, "Loading.... ");
 
 	s_shuttle_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_15));
 	text_layer_set_font(s_shuttle_layer, s_shuttle_font);
