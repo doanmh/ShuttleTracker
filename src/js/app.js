@@ -21,23 +21,22 @@ var xhrRequest = function(url, type, callback) {
 
 
 var fetchStops = function() {
-	var stops = [];
-	xhrRequest(stopsURL, "GET", function(response) {
-		arr = JSON.parse(response);
-		for (var i = 0; i < arr.length; i++) {
-			stops.push(arr[i]);
-		}
-	});
-	return stops;
-}
+	var xhrStops = new XMLHttpRequest();
+	xhrStops.onload = function() {
+		stopsArray = JSON.parse(this.responseText);
+	};
+	xhrStops.open("GET", stopsURL);
+	xhrStops.send();
+}();
 
 var fetchRoutes = function() {
-	var routes = [];
-	xhrRequest(routesURL, "GET", function(response) {
-		routes = JSON.parse(response);
-	});
-	return routes;
-}
+	var xhrRoutes = new XMLHttpRequest();
+	xhrRoutes.onload = function() {
+		routesArray = JSON.parse(this.responseText);
+	};
+	xhrRoutes.open("GET", routesURL);
+	xhrRoutes.send();
+}();
 
 var getEstimate = function(stop) {
 	var etaURL = "https://uc.doublemap.com/map/v2/eta?stop=" + stop.toString();
@@ -78,28 +77,43 @@ var getRoutesSelection = function() {
 	return options
 }
 
+var getStopsSelection = function(routeIndex) {
+	var stops = [{"label": "", "value":""}];
+	xhrRequest(routesURL, "GET", function(response) {
+		var routes = JSON.parse(response);
+		actualStopsID = routes[routeIndex].stops;
+
+		var actualStops = [];
+
+		for (var i = 0; i < stopsArray.length; i++) {
+			if (actualStopsID.indexOf(stopsArray[i].id) != -1) {
+				actualStops.push(stopsArray[i]);
+			}
+		}
+
+		for (var i = 0; i < actualStops.length; i++) {
+			var stop = { "label": actualStops[i].name, "value": actualStops[i].id};
+			stops.push(stop);
+		}
+	});
+	
+
+	return stops;
+}
+
 Pebble.addEventListener("ready", function(e) {
-	var chosenStop = localStorage.getItem('chosenStop');
-
-	if (chosenStop) {
-		getEstimate(chosenStop);
-	}
-
-	var xhrRoutes = new XMLHttpRequest();
-	xhrRoutes.onload = function() {
-		routesArray = JSON.parse(this.responseText);
-	};
-	xhrRoutes.open("GET", routesURL);
-	xhrRoutes.send();
-
-	var xhrStops = new XMLHttpRequest();
-	xhrStops.onload = function() {
-		stopsArray = JSON.parse(this.responseText);
-	};
-	xhrStops.open("GET", stopsURL);
-	xhrStops.send();
-
 	clayConfig[2].items[1].options = getRoutesSelection();
+
+	var chosenStop = localStorage.getItem('chosenStop');
+	var chosenRoute = localStorage.getItem('chosenRoute');
+
+	if (chosenStop && chosenRoute) {
+		getEstimate(chosenStop);
+		clayConfig[2].items[1].defaultValue = chosenRoute; 
+		clayConfig[2].items[2].options = getStopsSelection(chosenRoute);
+	} else {
+		clayConfig[2].items[1].defaultValue = ""; 
+	}
 
 	console.log("PebbleKitJS is ready!");
 });
@@ -121,9 +135,13 @@ Pebble.addEventListener('webviewclosed', function(e) {
 		return;
 	}
 
-	var stop = JSON.parse(e.response).select_stop.value;
+	var res = JSON.parse(e.response);
+
+	var stop = res.select_stop.value;
+	var route = res.select_route.value;
 
 	localStorage.setItem('chosenStop', stop);
+	localStorage.setItem('chosenRoute', route);
 
 	getEstimate(stop);
 
