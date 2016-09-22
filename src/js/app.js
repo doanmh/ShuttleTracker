@@ -149,10 +149,11 @@ Pebble.addEventListener("ready", function(e) {
 		clayConfig[2].items[1].defaultValue = ""; 
 	}
 
-	// setInterval(function() {
-	// 	chosenStop = localStorage.getItem('chosenStop');
-	// 	getEstimate(chosenStop);
-	// }, 30000)
+	setInterval(function() {
+		chosenStop = localStorage.getItem('chosenStop');
+		chosenRoute = localStorage.getItem('chosenRoute');
+		getEstimate(chosenStop, chosenRoute);
+	}, 30000)
 
 	console.log("PebbleKitJS is ready!");
 });
