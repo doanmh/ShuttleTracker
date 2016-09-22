@@ -38,14 +38,21 @@ var fetchRoutes = function() {
 	xhrRoutes.send();
 }();
 
-var getEstimate = function(stop) {
+var getEstimate = function(stop, routeID) {
 	var etaURL = "https://uc.doublemap.com/map/v2/eta?stop=" + stop.toString();
 	xhrRequest(etaURL, "GET", function(responseText) {
 		var parsedETA = JSON.parse(responseText);
 		if (parsedETA.etas[stop].etas.length == 0) {
-			var estimate = 15;
+			var estimate = -1;
 		} else {
-			var estimate = parsedETA.etas[stop].etas[0].avg;
+			var estimates = parsedETA.etas[stop].etas;
+			var estimate;
+			for (var i = 0; i < estimates.length; i++) {
+				if (estimates[i].route == routeID) {
+					estimate = estimates[i].avg;
+					break;
+				} 
+			}
 		}
 		
 		var dictionary = {
@@ -70,18 +77,25 @@ var getRoutesSelection = function() {
 	xhrRequest(routesURL, "GET", function(response) {
 		var routesArray = JSON.parse(response);
 		for (var i = 0; i < routesArray.length; i++) {
-			var option = { "label": routesArray[i].name, "value": i };
+			var option = { "label": routesArray[i].name, "value": routesArray[i].id };
 			options.push(option);
 		}
 	});
 	return options
 }
 
-var getStopsSelection = function(routeIndex) {
+var getStopsSelection = function(routeID) {
 	var stops = [{"label": "", "value":""}];
 	xhrRequest(routesURL, "GET", function(response) {
 		var routes = JSON.parse(response);
-		actualStopsID = routes[routeIndex].stops;
+		
+		var actualStopsID;
+		for (var i = 0; i < routes.length; i++) {
+			if (routes[i].id == routeID) {
+				actualStopsID = routes[i].stops;
+				break;
+			}
+		}
 
 		var actualStops = [];
 
@@ -108,12 +122,17 @@ Pebble.addEventListener("ready", function(e) {
 	var chosenRoute = localStorage.getItem('chosenRoute');
 
 	if (chosenStop && chosenRoute) {
-		getEstimate(chosenStop);
+		getEstimate(chosenStop, chosenRoute);
 		clayConfig[2].items[1].defaultValue = chosenRoute; 
 		clayConfig[2].items[2].options = getStopsSelection(chosenRoute);
 	} else {
 		clayConfig[2].items[1].defaultValue = ""; 
 	}
+
+	// setInterval(function() {
+	// 	chosenStop = localStorage.getItem('chosenStop');
+	// 	getEstimate(chosenStop);
+	// }, 30000)
 
 	console.log("PebbleKitJS is ready!");
 });
@@ -143,7 +162,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
 	localStorage.setItem('chosenStop', stop);
 	localStorage.setItem('chosenRoute', route);
 
-	getEstimate(stop);
+	getEstimate(stop, route);
+
+	clayConfig[2].items[2].options = getStopsSelection(route);
 
 	var dict = clay.getSettings(e.response)
 

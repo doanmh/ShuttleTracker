@@ -34,7 +34,13 @@ module.exports = function(minified) {
 		routesSelect.on("change", function() {
 			if (!isRebuit) {
 				routeIndex = parseInt(routesSelect.get());
-				actualStopsID = allRoutes[routeIndex].stops;
+				var actualStopsID;
+				for (var i = 0; i < allRoutes.length; i++) {
+					if (allRoutes[i].id == routeIndex) {
+						actualStopsID = allRoutes[i].stops;
+						break;
+					}
+				}
 				getActualStops(actualStopsID);
 			}
 			isRebuit = false;
