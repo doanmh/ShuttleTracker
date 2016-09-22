@@ -55,8 +55,28 @@ var getEstimate = function(stop, routeID) {
 			}
 		}
 		
+		var routeName;
+		for (var i = 0; i < routesArray.length; i++) {
+			if (routesArray[i].id == routeID) {
+				routeName = routesArray[i].name;
+				break;
+			}
+		}
+
+		var stopName;
+		for (var i = 0; i < stopsArray.length; i++) {
+			if (stopsArray[i].id == stop) {
+				stopName = stopsArray[i].name;
+				break;
+			}
+		}
+
+		console.log(stopName);
+
 		var dictionary = {
-			"ARRIVALTIME" : estimate
+			"ARRIVALTIME" : estimate,
+			"ROUTENAME": routeName,
+			"STOPNAME": stopName
 		}
 
 		Pebble.sendAppMessage(dictionary,

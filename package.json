@@ -28,7 +28,9 @@
       "configurable"
     ],
     "messageKeys": [
-      "ARRIVALTIME"
+      "ARRIVALTIME",
+      "ROUTENAME",
+      "STOPNAME"
     ],
     "resources": {
       "media": [

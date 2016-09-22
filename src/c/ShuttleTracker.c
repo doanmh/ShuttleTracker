@@ -2,41 +2,82 @@
 
 static Window *s_main_window;
 static TextLayer *s_shuttle_layer;
-static GFont s_shuttle_font;
+static TextLayer *s_route_layer;
+static TextLayer *s_stop_layer;
+static GFont s_font;
 
 static void main_window_load(Window *window) {
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_bounds(window_layer);
 	
-	s_shuttle_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(90, 85), bounds.size.w, 25));
-
+	s_shuttle_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(136, 131), bounds.size.w, 18));
+	s_stop_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 36));
+	s_route_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(64, 59), bounds.size.w, 36));
+	
 	text_layer_set_background_color(s_shuttle_layer, GColorClear);
 	text_layer_set_text_color(s_shuttle_layer, GColorBlack);
 	text_layer_set_text_alignment(s_shuttle_layer, GTextAlignmentLeft);
 	text_layer_set_text(s_shuttle_layer, "Loading.... ");
 
-	s_shuttle_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_15));
-	text_layer_set_font(s_shuttle_layer, s_shuttle_font);
+	text_layer_set_background_color(s_route_layer, GColorClear);
+	text_layer_set_text_color(s_route_layer, GColorBlack);
+	text_layer_set_text_alignment(s_route_layer, GTextAlignmentLeft);
 
+	text_layer_set_background_color(s_stop_layer, GColorClear);
+	text_layer_set_text_color(s_stop_layer, GColorBlack);
+	text_layer_set_text_alignment(s_stop_layer, GTextAlignmentLeft);
+
+	s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PERFECT_DOS_15));
+	text_layer_set_font(s_shuttle_layer, s_font);
+	text_layer_set_font(s_route_layer, s_font);
+	text_layer_set_font(s_stop_layer, s_font);
+
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_route_layer));
 	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_shuttle_layer));
+	layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_stop_layer));
 }
 
 static void main_window_unload(Window *window) {
 	text_layer_destroy(s_shuttle_layer);
-	fonts_unload_custom_font(s_shuttle_font);
+	fonts_unload_custom_font(s_font);
+	text_layer_destroy(s_route_layer);
+	text_layer_destroy(s_stop_layer);
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-	static char arrival_buffer[8];
+	static char arrival_buffer[32];
 	static char shuttle_layer_buffer[32];
+	static char route_buffer[32];
+	static char route_layer_buffer[32];
+	static char stop_buffer[32];
+	static char stop_layer_buffer[32];
 
 	Tuple *arrival_tuple = dict_find(iterator, MESSAGE_KEY_ARRIVALTIME);
+	Tuple *route_tuple = dict_find(iterator, MESSAGE_KEY_ROUTENAME);
+	Tuple *stop_tuple = dict_find(iterator, MESSAGE_KEY_STOPNAME);
+
+	if (stop_tuple) {
+		snprintf(stop_buffer, sizeof(stop_buffer), "Stop: %s", stop_tuple->value->cstring);
+	}
+
+	if (route_tuple) {
+		snprintf(route_buffer, sizeof(route_buffer), "Route: %s", route_tuple->value->cstring);
+	}
 
 	if (arrival_tuple) {
-		snprintf(arrival_buffer, sizeof(arrival_buffer), "%d mins", (int)arrival_tuple->value->int32);
+		if ((int)arrival_tuple->value->int32 == -1) {
+			snprintf(arrival_buffer, sizeof(arrival_buffer), "Est. time: No Info");
+		} else {
+			snprintf(arrival_buffer, sizeof(arrival_buffer), "Est. time: %d mins", (int)arrival_tuple->value->int32);
+		}
 	}
+
+	snprintf(stop_layer_buffer, sizeof(stop_layer_buffer), "%s", stop_buffer);
+	snprintf(route_layer_buffer, sizeof(route_layer_buffer), "%s", route_buffer);
 	snprintf(shuttle_layer_buffer, sizeof(shuttle_layer_buffer), "%s", arrival_buffer);
 	text_layer_set_text(s_shuttle_layer, shuttle_layer_buffer);
+	text_layer_set_text(s_route_layer, route_layer_buffer);
+	text_layer_set_text(s_stop_layer, stop_layer_buffer);
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
