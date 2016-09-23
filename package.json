@@ -30,19 +30,21 @@
     "messageKeys": [
       "ARRIVALTIME",
       "ROUTENAME",
-      "STOPNAME"
+      "STOPNAME",
+      "LASTSTOP",
+      "HEADING"
     ],
     "resources": {
       "media": [
         {
           "type": "font",
-          "name": "FONT_PERFECT_DOS_40",
+          "name": "FONT_PERFECT_DOS_20",
           "file": "fonts/perfect-dos-vga.ttf",
           "compatibility": "2.7"
         },
         {
           "type": "font",
-          "name": "FONT_PERFECT_DOS_15",
+          "name": "FONT_PERFECT_DOS_14",
           "file": "fonts/perfect-dos-vga.ttf",
           "compatibility": "2.7"
         }

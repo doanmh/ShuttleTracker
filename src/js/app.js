@@ -8,6 +8,7 @@ var routesURL = "https://uc.doublemap.com/map/v2/routes";
 var stopsURL = "https://uc.doublemap.com/map/v2/stops";
 var routesArray = [];
 var stopsArray = [];
+var busesArray = [];
 var userData = {};
 
 var xhrRequest = function(url, type, callback) {
@@ -38,10 +39,20 @@ var fetchRoutes = function() {
 	xhrRoutes.send();
 }();
 
+var fetchBuses = function() {
+	var xhrBuses = new XMLHttpRequest();
+	xhrBuses.onload = function() {
+		busesArray = JSON.parse(this.responseText);
+	};
+	xhrBuses.open("GET", busesURL);
+	xhrBuses.send();
+}();
+
 var getEstimate = function(stop, routeID) {
 	var etaURL = "https://uc.doublemap.com/map/v2/eta?stop=" + stop.toString();
 	xhrRequest(etaURL, "GET", function(responseText) {
 		var parsedETA = JSON.parse(responseText);
+		var busID;
 		if (parsedETA.etas[stop].etas.length == 0) {
 			var estimate = -1;
 		} else {
@@ -50,6 +61,7 @@ var getEstimate = function(stop, routeID) {
 			for (var i = 0; i < estimates.length; i++) {
 				if (estimates[i].route == routeID) {
 					estimate = estimates[i].avg;
+					busID = estimates[i].bus_id;
 					break;
 				} 
 			}
@@ -63,20 +75,39 @@ var getEstimate = function(stop, routeID) {
 			}
 		}
 
-		var stopName;
-		for (var i = 0; i < stopsArray.length; i++) {
-			if (stopsArray[i].id == stop) {
-				stopName = stopsArray[i].name;
+		var lastStopID, headingStopID;
+		for (var i = 0; i < busesArray.length; i++) {
+			if (busesArray[i].id == busID) {
+				lastStopID = busesArray[i].lastStop;
+				headingStopID = busesArray[i].heading;
 				break;
 			}
 		}
 
-		console.log(stopName);
+		var stopName;
+		var headingStopName = "";
+		var lastStopName = "";
+		for (var i = 0; i < stopsArray.length; i++) {
+			if (stopsArray[i].id == stop) {
+				stopName = stopsArray[i].name;
+			}
+			if (stopsArray[i].id == lastStopID) {
+				lastStopName = stopsArray[i].name;
+			}
+			if (stopsArray[i].id == headingStopID) {
+				headingStopName = stopsArray[i].name;
+			}
+		}
+
+		console.log(lastStopName);
+		console.log(headingStopName);
 
 		var dictionary = {
 			"ARRIVALTIME" : estimate,
 			"ROUTENAME": routeName,
-			"STOPNAME": stopName
+			"STOPNAME": stopName,
+			"LASTSTOP": lastStopName,
+			"HEADING": headingStopName
 		}
 
 		Pebble.sendAppMessage(dictionary,
