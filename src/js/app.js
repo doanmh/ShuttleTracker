@@ -23,33 +23,39 @@ var xhrRequest = function(url, type, callback) {
 
 var fetchStops = function() {
 	var xhrStops = new XMLHttpRequest();
-	xhrStops.onload = function() {
-		stopsArray = JSON.parse(this.responseText);
-	};
-	xhrStops.open("GET", stopsURL);
+	xhrStops.open("GET", stopsURL, false);
 	xhrStops.send();
-}();
+
+	if (xhrStops.status === 200) {
+		stopsArray = JSON.parse(xhrStops.responseText);
+	}
+};
 
 var fetchRoutes = function() {
 	var xhrRoutes = new XMLHttpRequest();
-	xhrRoutes.onload = function() {
-		routesArray = JSON.parse(this.responseText);
-	};
-	xhrRoutes.open("GET", routesURL);
-	xhrRoutes.send();
-}();
+	xhrRoutes.open("GET", routesURL, false);
+	xhrRoutes.send(null);
+
+	if (xhrRoutes.status === 200) {
+		routesArray = JSON.parse(xhrRoutes.responseText);
+	}
+};
 
 var fetchBuses = function() {
 	var xhrBuses = new XMLHttpRequest();
-	xhrBuses.onload = function() {
-		busesArray = JSON.parse(this.responseText);
-	};
-	xhrBuses.open("GET", busesURL);
+	xhrBuses.open("GET", busesURL, false);
 	xhrBuses.send();
-}();
+
+	if (xhrBuses.status === 200) {
+		busesArray = JSON.parse(xhrBuses.responseText);
+	}
+};
 
 var getEstimate = function(stop, routeID) {
 	var etaURL = "https://uc.doublemap.com/map/v2/eta?stop=" + stop.toString();
+	fetchBuses();
+	fetchStops();
+	fetchRoutes();
 	xhrRequest(etaURL, "GET", function(responseText) {
 		var parsedETA = JSON.parse(responseText);
 		var busID;
@@ -125,43 +131,35 @@ var getEstimate = function(stop, routeID) {
 
 var getRoutesSelection = function() {
 	var options = [ {"label": "", "value": ""} ];
-	xhrRequest(routesURL, "GET", function(response) {
-		var routesArray = JSON.parse(response);
-		for (var i = 0; i < routesArray.length; i++) {
-			var option = { "label": routesArray[i].name, "value": routesArray[i].id };
-			options.push(option);
-		}
-	});
+	for (var i = 0; i < routesArray.length; i++) {
+		var option = { "label": routesArray[i].name, "value": routesArray[i].id };
+		options.push(option);
+	}
 	return options
 }
 
 var getStopsSelection = function(routeID) {
 	var stops = [{"label": "", "value":""}];
-	xhrRequest(routesURL, "GET", function(response) {
-		var routes = JSON.parse(response);
-		
-		var actualStopsID;
-		for (var i = 0; i < routes.length; i++) {
-			if (routes[i].id == routeID) {
-				actualStopsID = routes[i].stops;
-				break;
-			}
+	var actualStopsID;
+	for (var i = 0; i < routesArray.length; i++) {
+		if (routesArray[i].id == routeID) {
+			actualStopsID = routesArray[i].stops;
+			break;
 		}
+	}
 
-		var actualStops = [];
+	var actualStops = [];
 
-		for (var i = 0; i < stopsArray.length; i++) {
-			if (actualStopsID.indexOf(stopsArray[i].id) != -1) {
-				actualStops.push(stopsArray[i]);
-			}
+	for (var i = 0; i < stopsArray.length; i++) {
+		if (actualStopsID.indexOf(stopsArray[i].id) != -1) {
+			actualStops.push(stopsArray[i]);
 		}
+	}
 
-		for (var i = 0; i < actualStops.length; i++) {
-			var stop = { "label": actualStops[i].name, "value": actualStops[i].id};
-			stops.push(stop);
-		}
-	});
-	
+	for (var i = 0; i < actualStops.length; i++) {
+		var stop = { "label": actualStops[i].name, "value": actualStops[i].id};
+		stops.push(stop);
+	}
 
 	return stops;
 }
